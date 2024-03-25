@@ -1,0 +1,67 @@
+﻿@page "/editleavetype/{leavetypeId}"
+@attribute [Authorize(Roles = "Admin")]
+<h3>Edit Leave Type</h3>
+@using ViewModels
+@using MudBlazor
+@inject MyBlazorApp.Service.IBlazorService service
+@inject NavigationManager navigate
+<EditForm Model="@editLeavetype" OnValidSubmit="SaveChanges">
+    <DataAnnotationsValidator />
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Leavetype Name" HelperText="Leavetype Name"
+                                  @bind-Value="editLeavetype.Name" For="@(() => editLeavetype.Name)" InputType="InputType.Text" />
+                    <MudTextField Label="DefaultDays" HelperText="DefaultDays"
+                                  @bind-Value="editLeavetype.DefaultDays" For="@(() => editLeavetype.DefaultDays)" InputType="InputType.Text" />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Save Changes</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+@code {
+    [Parameter]
+    public string leavetypeId { get; set; }
+    private LeaveTypeVM editLeavetype = new LeaveTypeVM();
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (int.TryParse(leavetypeId, out int parsedId) && parsedId > 0)
+            {
+                editLeavetype = await service.GetLeavetypeById(parsedId);
+                if (editLeavetype == null)
+                {
+                    navigate.NavigateTo("/leavetypes");
+                }
+            }
+            else
+            {
+                navigate.NavigateTo("/leavetypes");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error initializing edit page: {ex.Message}");
+        }
+    }
+    private async Task SaveChanges()
+    {
+        try
+        {
+            if (editLeavetype != null)
+            {
+                await service.Update(editLeavetype);
+                navigate.NavigateTo("/leavetypes");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving changes: {ex.Message}");
+        }
+    }
+}

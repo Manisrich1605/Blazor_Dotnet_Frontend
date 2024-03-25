@@ -1,0 +1,41 @@
+﻿@page "/fetchLeavetype/{leavetypeId}"
+@attribute [Authorize(Roles = "Admin")]
+@using ViewModels
+@using MudBlazor
+@inject MyBlazorApp.Service.IBlazorService service
+@inject NavigationManager navigate
+<h3>FetchLeavetype</h3>
+<MudContainer Class="mt-4">
+    <MudPaper Class="p-4 px-md-6">
+        @if (leavetype != null)
+        {
+            <MudDrawerHeader Typo="Typo.subtitle1" Class="mt-2 mb-0">Leavetype ID: @leavetype.Id</MudDrawerHeader>
+            <MudDrawerHeader Typo="Typo.subtitle1" Class="mt-2 mb-0">Leavetype Name: @leavetype.Name</MudDrawerHeader>
+            <MudDrawerHeader Typo="Typo.subtitle1" Class="mt-2 mb-0">Default Days: @leavetype.DefaultDays</MudDrawerHeader>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-3">Leavetype not found.</MudAlert>
+        }
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" @onclick="NavigateToLeavetypes">
+            Back to Leavetypes
+        </MudButton>
+    </MudPaper>
+</MudContainer>
+@code {
+    [Parameter]
+    public string leavetypeId { get; set; }
+    private LeaveTypeVM leavetype;
+    private int Id;
+    protected override async Task OnInitializedAsync()
+    {
+        if (int.TryParse(leavetypeId, out Id))
+        {
+            leavetype = await service.GetLeavetypeById(Id);
+        }
+    }
+    private void NavigateToLeavetypes()
+    {
+        navigate.NavigateTo("/leavetypes");
+    }
+}

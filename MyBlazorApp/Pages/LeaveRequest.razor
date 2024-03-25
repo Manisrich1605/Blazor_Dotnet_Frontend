@@ -1,0 +1,54 @@
+﻿@page "/leaverequests"
+@attribute [Authorize(Roles = "Admin")]
+@using ViewModels
+@using MudBlazor
+@inject NavigationManager NavigationManager
+@inject MyBlazorApp.Service.IBlazorReqService service
+@inject IJSRuntime JSRuntime
+<PageTitle>Leaverequests</PageTitle>
+<h1>Leaverequests</h1>
+<br />
+<br />
+<br />
+@if (leaverequests == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Employee Name</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Leave Type</th>
+                <th>Date Requested</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var leaverequest in leaverequests)
+            {
+                <tr>
+                    <td>@leaverequest.Employee</td>
+                    <td>@leaverequest.StartDate.ToString("yyyy-MM-dd")</td>
+                    <td>@leaverequest.EndDate.ToString("yyyy-MM-dd")</td>
+                    <td>@leaverequest.LeaveType</td>
+                    <td>@leaverequest.DateRequested.ToString("yyyy-MM-dd")</td>
+                    <td>
+                        <button class="btn btn-success"><i class="fa fa-thumbs-up" aria-hidden="true"></i></button>
+                        <button class="btn btn-danger"><i class="fa fa-thumbs-down" aria-hidden="true"></i></button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@code {
+    private List<LeaveRequestVM> leaverequests = new List<LeaveRequestVM>();//initialize view model
+    protected override async Task OnInitializedAsync()//retrieves products from service and populate product list
+    {
+        leaverequests = (await service.GetAll()).ToList();
+    }
+}

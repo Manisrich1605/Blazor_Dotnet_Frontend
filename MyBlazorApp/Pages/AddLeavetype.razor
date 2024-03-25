@@ -1,0 +1,44 @@
+﻿@page "/addleavetype"
+@attribute [Authorize(Roles = "Admin")]
+<h3>Add Product</h3>
+@using ViewModels
+@using MudBlazor
+@inject MyBlazorApp.Service.IBlazorService service
+@inject NavigationManager navigate
+
+<EditForm Model="@newLeavetype" OnValidSubmit="AddNewLeavetype">
+    <DataAnnotationsValidator />
+    <MudGrid>
+        <MudItem xs="12" sm="7">
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Leavetype Name" HelperText="Leavetype Name"
+                                  @bind-Value="newLeavetype.Name" For="@(() => newLeavetype.Name)" InputType="InputType.Text" />
+                    <MudTextField Label="DefaultDays" HelperText="DefaultDays"
+                                  @bind-Value="newLeavetype.DefaultDays" For="@(() => newLeavetype.DefaultDays)" InputType="InputType.Text" />
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Add Leavetype</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</EditForm>
+
+
+@code {
+    private LeaveTypeVM newLeavetype = new LeaveTypeVM();
+
+    private async Task AddNewLeavetype()
+    {
+        try
+        {
+            int leavetypeId = await service.Add(newLeavetype);
+            navigate.NavigateTo("/leavetypes");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error adding new leave type and navigating: {ex.Message}");
+        }
+    }
+}

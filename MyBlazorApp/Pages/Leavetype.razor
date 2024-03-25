@@ -1,0 +1,126 @@
+﻿@page "/leavetypes"
+@using ViewModels
+@using MudBlazor
+@inject NavigationManager NavigationManager
+@inject MyBlazorApp.Service.IBlazorService service
+@inject IJSRuntime JSRuntime
+<PageTitle>Leavetypes</PageTitle>
+<h1>Leavetypes</h1>
+<br />
+<MudTextField Label="Search" @bind-Value="@searchString" Variant="Variant.Filled" Class="mb-4" />
+<button class="btn btn-primary" @onclick="() => NavigateToCreateLeaveTypePage()">Create</button>
+<MudTable Items="@pagedLeavetypes" RowsPerPage="5" Search="@searchString" SearchChanged="@OnSearchChanged" TotalItems="@totalItems" RowClicked="@OnRowClicked">
+    <HeaderContent>
+        <MudTh SortDirection="@GetSortDirection("Name")" @onclick="@(() => SortData("Name"))">
+            Leavetype
+            @if (IsSorted("Name"))
+            {
+                <MudIcon Icon="@GetSortIcon("Name")" />
+            }
+        </MudTh>
+        <MudTh SortDirection="@GetSortDirection("DefaultDays")" @onclick="@(() => SortData("DefaultDays"))">
+            Defaultdays
+            @if (IsSorted("DefaultDays"))
+            {
+                <MudIcon Icon="@GetSortIcon("DefaultDays")" />
+            }
+        </MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Name</MudTd>
+            <MudTd>@context.DefaultDays</MudTd>
+            <MudTd>
+                <button class="btn btn-success"><a href="@($"fetchLeavetype/{context.Id}")"><MudIcon Icon="@Icons.Material.Filled.Info" /></a></button>
+                <button class="btn btn-warning" @onclick="() => EditLeavetype(context)"><MudIcon Icon="@Icons.Material.Filled.Edit" /></button>
+                <button class="btn btn-danger"><a href="@($"deleteconfirmation/{context.Id}")"><MudIcon Icon="@Icons.Material.Filled.Delete" /></a></button>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    @code {
+    private List<LeaveTypeVM> leavetypes = new List<LeaveTypeVM>();
+    private List<LeaveTypeVM> pagedLeavetypes = new List<LeaveTypeVM>();
+    private string searchString = "";
+    private int totalItems;
+    private SortDirection sortDirection = SortDirection.Ascending;
+    private string sortedColumn;
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+    private async Task LoadData()
+    {
+        leavetypes = (await service.GetAll()).ToList();
+        FilterData();
+    }
+    private void FilterData()
+    {
+        pagedLeavetypes = string.IsNullOrEmpty(searchString) ? leavetypes : leavetypes.Where(p => p.Name.ToLower().Contains(searchString.ToLower())).ToList();
+        totalItems = pagedLeavetypes.Count;
+        StateHasChanged();
+    }
+    private void OnSearchChanged(string value)
+    {
+        searchString = value;
+        FilterData();
+    }
+    private void EditLeavetype(LeaveTypeVM leavetype)
+    {
+        NavigationManager.NavigateTo($"/editleavetype/{leavetype.Id}");
+    }
+    private async Task DeleteLeavetype(LeaveTypeVM leavetype)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete {leavetype.Name}?");
+        if (confirmed)
+        {
+            try
+            {
+                await service.Delete(leavetype.Id);
+                leavetypes.Remove(leavetype);
+                FilterData();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting leavetype: {ex.Message}");
+            }
+        }
+    }
+    private void OnRowClicked(LeaveTypeVM leavetype)
+    {
+        NavigationManager.NavigateTo($"/editleavetype/{leavetype.Id}");
+    }
+    private void NavigateToCreateLeaveTypePage()
+    {
+        NavigationManager.NavigateTo("/addleavetype");
+    }
+    private void SortData(string column)
+    {
+        if (sortedColumn == column)
+        {
+            sortDirection = sortDirection == SortDirection.Ascending ? SortDirection.Descending : SortDirection.Ascending;
+        }
+        else
+        {
+            sortedColumn = column;
+            sortDirection = SortDirection.Ascending;
+        }
+        pagedLeavetypes = sortDirection == SortDirection.Ascending ?
+            pagedLeavetypes.OrderBy(x => column == "Name" ? x.Name : x.DefaultDays.ToString()).ToList() :
+            pagedLeavetypes.OrderByDescending(x => column == "Name" ? x.Name : x.DefaultDays.ToString()).ToList();
+    }
+    private SortDirection GetSortDirection(string column)
+    {
+        return sortedColumn == column ? sortDirection : SortDirection.None;
+    }
+    private string GetSortIcon(string column)
+    {
+        return sortDirection == SortDirection.Ascending ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward;
+    }
+    private bool IsSorted(string column)
+    {
+        return sortedColumn == column;
+    }
+}

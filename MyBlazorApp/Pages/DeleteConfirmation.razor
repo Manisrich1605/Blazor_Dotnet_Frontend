@@ -1,0 +1,31 @@
+﻿@page "/deleteconfirmation/{LeavetypeId:int}"
+@using ViewModels
+@inject MyBlazorApp.Service.IBlazorService service
+@inject NavigationManager NavigationManager
+<h1>Delete Confirmation</h1><br />
+<div>
+    Are you sure you want to delete the leave type with ID: <strong>@LeavetypeId</strong>?
+</div><br/><br/>
+<div>
+    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>&emsp;&emsp;
+    <button type="button" class="btn btn-danger" @onclick="DeleteLeavetype">Delete</button>
+</div>
+@code {
+    [Parameter] public int LeavetypeId { get; set; }
+    private async Task DeleteLeavetype()
+    {
+        try
+        {
+            await service.Delete(LeavetypeId);
+            NavigationManager.NavigateTo("/leavetypes");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting leavetype: {ex.Message}");
+        }
+    }
+    private void CancelDelete()
+    {
+        NavigationManager.NavigateTo("/leavetypes");
+    }
+}
